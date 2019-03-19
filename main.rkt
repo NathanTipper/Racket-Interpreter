@@ -23,7 +23,7 @@
     ; If the program is just an empty list, say fuck it and return 0
     [(equal? program '()) 0]
     ; Process any defines
-    [(and (list? (car program)) (equal? (car (car program)) 'define)) (myEval (cdr program) (addBinding (car program) bindings))]
+    [(and (list? program) (list? (car program)) (equal? (car (car program)) 'define)) (myEval (cdr program) (addBinding (car program) bindings))]
     ; If the program is not a list, just return whatever it is
     [(not (list? program)) program]
     ; If the program is a list and all there is just the list, return the list inside the program NOT SURE IF THIS IS NEEDED
