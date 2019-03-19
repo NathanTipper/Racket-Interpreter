@@ -22,12 +22,12 @@
   (cond
     ; If the program is just an empty list, say fuck it and return 0
     [(equal? program '()) 0]
-    ; Process any defines
-    [(and (list? program) (list? (car program)) (equal? (car (car program)) 'define)) (myEval (cdr program) (addBinding (car program) bindings))]
+    ; Get a variable
+    [(symbol? program) (findBinding program bindings)]
     ; If the program is not a list, just return whatever it is
     [(not (list? program)) program]
-    ; If the program is a list and all there is just the list, return the list inside the program NOT SURE IF THIS IS NEEDED
-    [(and (list? program) (null? (cdr program))) (car program)]
+    ; Process any defines
+    [(and (list? (car program)) (equal? (car (car program)) 'define)) (myEval (cdr program) (addBinding (car program) bindings))]
     ; If the first element in the program is a list and the rest of the program is empty, evaluate the list in the program. Seems like a repeat of above but better... lawl
     [(and (list? (car program)) (null? (cdr program))) (myEval (car program) bindings)]
     ; If program wants to quote, ignore that crap
@@ -43,11 +43,11 @@
     ; Test equality
     [(equal? (car program) '=) (isEqual? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Test greater than
-    [(equal? (car program) '>) (isGreaterThan? (myEval (car (cdr program) bindings)) (myEval (car (cdr (cdr program))) bindings))]
+    [(equal? (car program) '>) (isGreaterThan? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Test less than
-    [(equal? (car program) '<) (isLessThan? (myEval (car (cdr program) bindings)) (myEval (car (cdr (cdr program))) bindings))]
+    [(equal? (car program) '<) (isLessThan? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Test less than or equal to
-    [(equal? (car program) '<=) (isLessOrEqualThan? (myEval (car (cdr program) bindings)) (myEval (car (cdr (cdr program))) bindings))]
+    [(equal? (car program) '<=) (isLessOrEqualThan? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Test greater than or equal
     [(equal? (car program) '>=) (isGreaterOrEqualThan? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Test object equality
@@ -62,9 +62,29 @@
     [(equal? (car program) 'pair?) (isPair? (myEval (cdr program) bindings))]
     ; Test an if condition
     [(equal? (car program) 'if) (if (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings) (myEval (cdr (cdr (cdr program))) bindings))]
-    ; Get a variable
-    [(symbol? (car program)) (findBinding (car program) bindings)]
     [else program])
   )
 
-(startEval '(if(= (+ 2 2) (+ 4 1)) 2 3))
+; TEST BED
+(startEval '()) ; Empty - Expected Output: 0
+(startEval '(2)) ; Number - Expected Output: 2
+(startEval '((define x 5) (define y 6) (* x y))) ; Variables - Expected Output: 30
+(startEval '(quote 4)) ; Quote - Expected Output: 4
+(startEval '(+ (+ 7 3) (+ 2 3))) ; Addition - Expected Output: 15
+(startEval '(- (- 7 3) (- 2 3))) ; Subtraction - Expected Output: -1
+(startEval '(* (* 7 3) (* 2 3))) ; Multiplication - Expected Output: 105
+(startEval '(/ (/ 30 3) (/ 25 5))) ; Division - Expected Output: 2
+(startEval '(= (+ 3 3) 5)) ; Equality - Expected Output: False
+(startEval '(= (/ 20 5) 4)) ; Equality - Expected Output: True
+(startEval '(> 6 (* 3 2))) ; Greater Than - Expected Output: False
+(startEval '(> (* 5 4) 5)) ; Greater Than - Expected Output: True
+(startEval '(< 20 (* 5 4))) ; Greater Than - Expected Output: False
+(startEval '(< (* 5 3) 20)) ; Greater Than - Expected Output: True
+(startEval '(>= 7 (* 3 3))) ; Greatern Than - Expected Output: False
+(startEval '(>= 9 (* 3 3))) ; Greater Than - Expected Output: True
+(startEval '(<= 10 (* 3 3))) ; Greater Than - Expected Output: False
+(startEval '(<= 9 (* 3 3))) ; Greater Than - Expected Output: True
+(startEval '((define y 9) (equal? y 8))) ; Object Equality - Expected Output: False
+(startEval '((define x 5) (equal? x 5))) ; Object Equality - Expected Output: True
+(startEval '(if (= (* 7 3) (+ 15 7)) (+ 5 4) (* 7 8))) ; if Condition - Expected Output: 56
+(startEval '(if (= (* 7 3) (+ 15 6)) (+ 5 4) (* 7 8))) ; if Condition - Expected Output: 9
