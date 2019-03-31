@@ -8,17 +8,73 @@
     [(symbol? (car newBinding)) (append (list newBinding) currentBindings)]
     [else (append (list (cdr newBinding)) currentBindings)])
   )
+
+(define (addBindings newBindings currentBindings)
+  (print currentBindings)
+  (cond
+    [(null? newBindings) currentBindings]
+    [(equal? (car newBindings) 'lambda) (addBindings (cdr newBindings) (append (list (car newBindings) currentBindings) currentBindings))]  
+    [else (addBindings (cdr newBindings) (append (list (car newBindings)) currentBindings))]
+  ))
   
 (define (bindLambdaVariables variables values)
   (if (null? variables) '()
       (append (bindLambdaVariables (cdr variables) (cdr values)) (list (list (car variables) (car values)))))
   )
 
-(define (findBinding variable bindings)
+(define (findBinding binding bindings)
+  (print binding)
+  (print bindings)
   (cond
     [(null? bindings) -1]
-    [(equal? variable (car (car bindings))) (car (cdr (car bindings)))]
-    [else (findBinding variable (cdr bindings))])
+    [(and (list? binding) (equal? (car binding) (caar bindings)) (equal? (caadar bindings) 'lambda)) (createLambdaBindings (cdr binding) (list (cadar bindings)))]
+    [(equal? binding (car (car bindings))) (car (cdr (car bindings)))]
+    [else (findBinding binding (cdr bindings))])
+  )
+
+(define (createLambdaBindings bindings lambda)
+  (cond
+    [(null? bindings) lambda]
+    [else (createLambdaBindings (cdr bindings) (append lambda (list (car bindings))))]
+    )
+  )
+
+(define (isLambda list)
+  (cond
+    [(not (list? list)) #f]
+    [(equal? (car list) 'lambda) #t]
+    [else (isLambda (car list))]
+    ))
+
+(define (processLet program bindings)
+  #f
+  )
+
+(define (processLambda lambda bindings)
+  (cond
+    ; Simple lambda
+    [(equal? (caar lambda) 'lambda) (myEval (cddar lambda) (append (bindLambdaVariables (cadar lambda) (cdr lambda)) bindings))]
+    ; Nested lambda
+    
+    )
+)
+
+(define (processNestedLambda lambda bindings)
+  (cond
+    
+    )
+  )
+
+(define (deep lambdaExp)
+  (letrec ([f (lambda (exp x) (cond
+                            [(not (list? exp)) x]
+                            [(not (list? (car exp))) x]
+                            [(equal? (caar exp) 'lambda) (f (cddar exp) (add1 x))]
+                            [else (f (car exp) x)]
+                            )
+                )])
+    (f lambdaExp 0)
+    )
   )
 
 (define (startEval program)
@@ -74,11 +130,12 @@
     ; Test an if condition
     [(equal? (car program) 'if) (if (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings) (myEval (cdr (cdr (cdr program))) bindings))]
     ; Test lambda variables
-    [(equal? (car program) 'lambda) (myEval (car (cdr (cdr program))))]
+    [(equal? (car program) 'lambda) (myEval (car (cdr (cdr program))) bindings)]
     ; Test for let
-    [(equal? (car program) 'let) (myEval (cdr (cdr program)) (addBinding (car (car (cdr program))) bindings))]
+    [(equal? (car program) 'let) (myEval (cdr (cdr program)) (addBindings (car (cdr program)) bindings))]
     ; Test for letrec
     [(equal? (car program) 'letrec) (myEval (cdr (cdr program)) (addBinding (car (car (cdr program))) bindings))]
+    [(and (pair? program) (symbol? (car program))) (myEval (findBinding program bindings) bindings)]
     [else program])
   )
 
@@ -107,6 +164,4 @@
 (startEval '(if (= (* 7 3) (+ 15 6)) (+ 5 4) (* 7 8))) ; if Condition - Expected Output: 9
 (startEval '((lambda (x y z) (+ x z)) 1 3 5)) ; lambda expression - Expected Output: 6
 (startEval '(let ([x 5]) (+ x 5))) ; let binding - Expected Output: 10
-(startEval '(letrec ([fact (lambda (x) (if (= x 0) (quote 1)
-                                          (* x (fact (- x 1)))))])
-              (fact 10)))
+(startEval '(let ([f (lambda (x) (* x x))]) (f 5)))
