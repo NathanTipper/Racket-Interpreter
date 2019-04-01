@@ -26,17 +26,10 @@
   (print binding)
   (print bindings)
   (cond
-    [(null? bindings) #f]
-    [(equal? binding (car (car bindings))) #t]
-    [else (findBinding binding (cdr bindings))])
-  )
-
-(define (getBinding binding bindings)
-  (cond 
+    [(null? bindings) -1]
     [(and (list? binding) (equal? (car binding) (caar bindings)) (equal? (caadar bindings) 'lambda)) (createLambdaBindings (cdr binding) (list (cadar bindings)))]
-    [(equal? binding (caar bindings)) (cadar bindings)]
-    [else (getBinding binding bindings)]
-  )
+    [(equal? binding (car (car bindings))) (car (cdr (car bindings)))]
+    [else (findBinding binding (cdr bindings))])
   )
 
 (define (createLambdaBindings bindings lambda)
@@ -93,8 +86,7 @@
     ; If the program is just an empty list, say fuck it and return 0
     [(equal? program '()) 0]
     ; Get a variable
-    [(and (list? program) (findBinding (car program) bindings)) (myEval (getBinding (car program) bindings) bindings)]
-    [(and (list? program) (findBinding program bindings)) (myEval (getBinding program bindings) bindings)]
+    [(symbol? program) (myEval (findBinding program bindings) bindings)]
     ; If the program is not a list, just return whatever it is
     [(not (list? program)) program]
     ; If program is a list of only one list, evaulate the inner list
@@ -143,6 +135,7 @@
     [(equal? (car program) 'let) (myEval (cdr (cdr program)) (addBindings (car (cdr program)) bindings))]
     ; Test for letrec
     [(equal? (car program) 'letrec) (myEval (cdr (cdr program)) (addBinding (car (car (cdr program))) bindings))]
+    [(and (pair? program) (symbol? (car program))) (myEval (findBinding program bindings) bindings)]
     [else program])
   )
 
