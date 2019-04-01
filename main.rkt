@@ -4,38 +4,51 @@
 (require "lists.rkt")
 
 (define (addBinding newBinding currentBindings)
+  ;(print newBinding)
   (cond
+    ;[(and (list? (cadr newBinding)) (equal? (caadr newBinding) 'lambda) isletrec) (let ([binding (list (car newBinding) (list (cadr newBinding)))])
+    ;                                                                               (append (list (append binding currentBindings)) currentBindings))]
     [(symbol? (car newBinding)) (append (list newBinding) currentBindings)]
     [else (append (list (cdr newBinding)) currentBindings)])
   )
 
 (define (addBindings newBindings currentBindings)
-  (print currentBindings)
+  ;(print currentBindings)
+  ;(newline)
   (cond
     [(null? newBindings) currentBindings]
-    [(equal? (car newBindings) 'lambda) (addBindings (cdr newBindings) (append (list (car newBindings) currentBindings) currentBindings))]  
+    ;[(and (list? (cadar newBindings)) (equal? (caadar newBindings) 'lambda)) (addBindings (cdr newBindings) (append (list (list (caar newBindings) (list (cadar newBindings) currentBindings))) currentBindings))]  
     [else (addBindings (cdr newBindings) (append (list (car newBindings)) currentBindings))]
   ))
   
-(define (bindLambdaVariables variables values)
-  (if (null? variables) '()
-      (append (bindLambdaVariables (cdr variables) (cdr values)) (list (list (car variables) (car values)))))
+(define (bindLambdaVariables variables values cbindings)
+  (cond
+    [(null? variables) '()]
+    [(and (list? (car values)) (equal? (car variables) (car (member (car variables) (car values))))) (append (bindLambdaVariables (cdr variables) (cdr values) cbindings) (list (list (car variables) (myEval (car values) cbindings))))] 
+    [(append (bindLambdaVariables (cdr variables) (cdr values) cbindings) (list (list (car variables) (car values))))])
   )
 
 (define (findBinding binding bindings)
   (print binding)
+  (print " ")
+  (print "Find Binding")
   (print bindings)
+  (newline)
   (cond
     [(null? bindings) #f]
-    [(equal? binding (car (car bindings))) #t]
+    [(equal? binding (caar bindings)) #t]
+    [(and (list? binding) (equal? (car binding) (caar bindings))) #t]
     [else (findBinding binding (cdr bindings))])
   )
 
 (define (getBinding binding bindings)
+  ;(print bindings)
+  ;(newline)
   (cond 
     [(and (list? binding) (equal? (car binding) (caar bindings)) (equal? (caadar bindings) 'lambda)) (createLambdaBindings (cdr binding) (list (cadar bindings)))]
+    [(and (list? binding) (equal? (car binding) (caar bindings)) (equal? (car (caadar bindings)) 'lambda)) (createLambdaBindings (cdr binding) (list (caadar bindings)))]
     [(equal? binding (caar bindings)) (cadar bindings)]
-    [else (getBinding binding bindings)]
+    [else (getBinding binding (cdr bindings))]
   )
   )
 
@@ -92,17 +105,17 @@
   (cond
     ; If the program is just an empty list, say fuck it and return 0
     [(equal? program '()) 0]
-    ; Get a variable
-    [(and (list? program) (findBinding (car program) bindings)) (myEval (getBinding (car program) bindings) bindings)]
-    [(and (list? program) (findBinding program bindings)) (myEval (getBinding program bindings) bindings)]
+    [(findBinding program bindings) (myEval (getBinding program bindings) bindings)]
     ; If the program is not a list, just return whatever it is
     [(not (list? program)) program]
     ; If program is a list of only one list, evaulate the inner list
     [(and (list? program) (null? (cdr program))) (myEval (car program) bindings)]
+    ; Get a variable
+    ;[(findBinding (car program) bindings) (myEval (getBinding (car program) bindings) bindings)]
     ; Process any defines
     [(and (list? (car program)) (equal? (car (car program)) 'define)) (myEval (cdr program) (addBinding (cdr (car program)) bindings))]
     ; Process lambdas
-    [(and (list? (car program)) (equal? (car (car program)) 'lambda)) (myEval (cdr (cdr (car program))) (append (bindLambdaVariables (car (cdr (car program))) (cdr program)) bindings))]
+    [(and (list? (car program)) (equal? (car (car program)) 'lambda)) (myEval (cdr (cdr (car program))) (append (bindLambdaVariables (car (cdr (car program))) (cdr program) bindings) bindings))]
     ; If the first element in the program is a list and the rest of the program is empty, evaluate the list in the program. Seems like a repeat of above but better... lawl
     [(and (list? (car program)) (null? (cdr program))) (myEval (car program) bindings)]
     ; If program wants to quote, ignore that crap
@@ -138,7 +151,7 @@
     ; Test an if condition
     [(equal? (car program) 'if) (if (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings) (myEval (cdr (cdr (cdr program))) bindings))]
     ; Test lambda variables
-    [(equal? (car program) 'lambda) (myEval (car (cdr (cdr program))) bindings)]
+    ;[(equal? (car program) 'lambda) (myEval (car (cdr (cdr program))) bindings)]
     ; Test for let
     [(equal? (car program) 'let) (myEval (cdr (cdr program)) (addBindings (car (cdr program)) bindings))]
     ; Test for letrec
@@ -171,4 +184,7 @@
 (startEval '(if (= (* 7 3) (+ 15 6)) (+ 5 4) (* 7 8))) ; if Condition - Expected Output: 9
 (startEval '((lambda (x y z) (+ x z)) 1 3 5)) ; lambda expression - Expected Output: 6
 (startEval '(let ([x 5]) (+ x 5))) ; let binding - Expected Output: 10
-(startEval '(let ([f (lambda (x) (* x x))]) (f 5)))
+(startEval '(let ([f (lambda (x) (* x x))]) (f 5))) ; let-lambda binding - Expected Output: 25
+(startEval '(letrec ([f (lambda (x) (if (= x 1) 1
+                                        (* x (f (- x 1)))))])
+              (f 10))) ; letrec binding - Expected Output: 3628800
