@@ -69,38 +69,25 @@
     )
   )
 
-; Helper function for a lambda in a list
-; Parameter list: the list to search for lambda
-; Returns true if there is a lambda, false otherwise
-(define (isLambda list)
-  (cond
-    [(not (list? list)) #f]
-    [(equal? (car list) 'lambda) #t]
-    [else (isLambda (car list))]
-    ))
-
 (define (startEval program)
   (myEval program '())
   )
 
 (define (myEval program bindings)
   (cond
-    ; If the program is just an empty list, say fuck it and return 0
+    ; If the program is just an empty list return 0
     [(equal? program '()) 0]
     [(findBinding program bindings) (myEval (getBinding program bindings) bindings)]
     ; If the program is not a list, just return whatever it is
     [(not (list? program)) program]
     ; If program is a list of only one list, evaulate the inner list
     [(and (list? program) (null? (cdr program))) (myEval (car program) bindings)]
-    ; Get a variable
-    ;[(findBinding (car program) bindings) (myEval (getBinding (car program) bindings) bindings)]
     ; Process any defines
     [(and (list? (car program)) (equal? (car (car program)) 'define)) (myEval (cdr program) (addBinding (cdr (car program)) bindings))]
     ; Process lambdas
     [(and (list? (car program)) (equal? (car (car program)) 'lambda)) (myEval (cdr (cdr (car program))) (append (bindLambdaVariables (car (cdr (car program))) (cdr program) bindings) bindings))]
-    ; If the first element in the program is a list and the rest of the program is empty, evaluate the list in the program. Seems like a repeat of above but better... lawl
+    ; If the first element in the program is a list and the rest of the program is empty, evaluate the list in the program.
     [(and (list? (car program)) (null? (cdr program))) (myEval (car program) bindings)]
-    ; If program wants to quote, ignore that crap
     [(equal? (car program) 'quote) (myEval (cdr program) bindings)]
     ; Add
     [(equal? (car program) '+) (add (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
@@ -132,8 +119,6 @@
     [(equal? (car program) 'pair?) (isPair? (myEval (cdr program) bindings))]
     ; Test an if condition
     [(equal? (car program) 'if) (if (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings) (myEval (cdr (cdr (cdr program))) bindings))]
-    ; Test lambda variables
-    ;[(equal? (car program) 'lambda) (myEval (car (cdr (cdr program))) bindings)]
     ; Test for let
     [(equal? (car program) 'let) (myEval (cdr (cdr program)) (addBindings (car (cdr program)) bindings))]
     ; Test for letrec
