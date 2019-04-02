@@ -1,26 +1,32 @@
 #lang racket
-
+; Racket interpreter - CPSC 3740 Final Project
+; Nathan Tipper & Vincent Cote
+; April 1st, 2019
 (require "operators.rkt")
 (require "lists.rkt")
 
+; Helper function to add a new binding to the current list of bindings
+; Parameter newBinding: the new binding to be added to the list
+; Parameter currentBindings: the current ongoing list of bindings
 (define (addBinding newBinding currentBindings)
-  ;(print newBinding)
   (cond
-    ;[(and (list? (cadr newBinding)) (equal? (caadr newBinding) 'lambda) isletrec) (let ([binding (list (car newBinding) (list (cadr newBinding)))])
-    ;                                                                               (append (list (append binding currentBindings)) currentBindings))]
     [(symbol? (car newBinding)) (append (list newBinding) currentBindings)]
     [else (append (list (cdr newBinding)) currentBindings)])
   )
 
+; Helper function to add a multiple new binding to the current list of bindings
+; Parameter newBindings: the new bindings to be added to the list
+; Parameter currentBindings: the current ongoing list of bindings
 (define (addBindings newBindings currentBindings)
-  ;(print currentBindings)
-  ;(newline)
   (cond
     [(null? newBindings) currentBindings]
-    ;[(and (list? (cadar newBindings)) (equal? (caadar newBindings) 'lambda)) (addBindings (cdr newBindings) (append (list (list (caar newBindings) (list (cadar newBindings) currentBindings))) currentBindings))]  
     [else (addBindings (cdr newBindings) (append (list (car newBindings)) currentBindings))]
   ))
-  
+
+; Helper function to bind lambda variables to the current bindings
+; Parameter variable: the variables to add
+; Parameter values: the values to the variables
+; Parameter cbindings: the current ongoing list of bindings
 (define (bindLambdaVariables variables values cbindings)
   (cond
     [(null? variables) '()]
@@ -28,12 +34,11 @@
     [(append (bindLambdaVariables (cdr variables) (cdr values) cbindings) (list (list (car variables) (car values))))])
   )
 
+; Function to search the list of bindings to see if it is in the list
+; Parameter binding: the binding to search for
+; Parameter bindings: the current ongoing list of bindings
+; Returns true if binding is in the list, false otherwise
 (define (findBinding binding bindings)
-  (print binding)
-  (print " ")
-  (print "Find Binding")
-  (print bindings)
-  (newline)
   (cond
     [(null? bindings) #f]
     [(equal? binding (caar bindings)) #t]
@@ -41,9 +46,11 @@
     [else (findBinding binding (cdr bindings))])
   )
 
+; Function to return a binding from the list
+; Parameter binding: the binding to to get
+; Parameter bindings: the current ongoing list of bindings
+; Returns the binding from the list
 (define (getBinding binding bindings)
-  ;(print bindings)
-  ;(newline)
   (cond 
     [(and (list? binding) (equal? (car binding) (caar bindings)) (equal? (caadar bindings) 'lambda)) (createLambdaBindings (cdr binding) (list (cadar bindings)))]
     [(and (list? binding) (equal? (car binding) (caar bindings)) (equal? (car (caadar bindings)) 'lambda)) (createLambdaBindings (cdr binding) (list (caadar bindings)))]
@@ -52,6 +59,9 @@
   )
   )
 
+; Function to append a value to a lambda from the bindings list
+; Parameter binding: the value to be appended to the lambda
+; Parameter lambda: the lambda expression to be appended to
 (define (createLambdaBindings bindings lambda)
   (cond
     [(null? bindings) lambda]
@@ -59,43 +69,15 @@
     )
   )
 
+; Helper function for a lambda in a list
+; Parameter list: the list to search for lambda
+; Returns true if there is a lambda, false otherwise
 (define (isLambda list)
   (cond
     [(not (list? list)) #f]
     [(equal? (car list) 'lambda) #t]
     [else (isLambda (car list))]
     ))
-
-(define (processLet program bindings)
-  #f
-  )
-
-(define (processLambda lambda bindings)
-  (cond
-    ; Simple lambda
-    [(equal? (caar lambda) 'lambda) (myEval (cddar lambda) (append (bindLambdaVariables (cadar lambda) (cdr lambda)) bindings))]
-    ; Nested lambda
-    
-    )
-)
-
-(define (processNestedLambda lambda bindings)
-  (cond
-    
-    )
-  )
-
-(define (deep lambdaExp)
-  (letrec ([f (lambda (exp x) (cond
-                            [(not (list? exp)) x]
-                            [(not (list? (car exp))) x]
-                            [(equal? (caar exp) 'lambda) (f (cddar exp) (add1 x))]
-                            [else (f (car exp) x)]
-                            )
-                )])
-    (f lambdaExp 0)
-    )
-  )
 
 (define (startEval program)
   (myEval program '())
