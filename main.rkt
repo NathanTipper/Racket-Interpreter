@@ -104,9 +104,9 @@
     ; Test less than
     [(equal? (car program) '<) (isLessThan? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Test less than or equal to
-    [(equal? (car program) '<=) (isLessOrEqualThan? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
+    [(equal? (car program) '<=) (isLessThanOrEqual? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Test greater than or equal
-    [(equal? (car program) '>=) (isGreaterOrEqualThan? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
+    [(equal? (car program) '>=) (isGreaterThanOrEqual? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Test object equality
     [(equal? (car program) 'equal?) (areEqual? (myEval (car (cdr program)) bindings) (myEval (car (cdr (cdr program))) bindings))]
     ; Return remainder of list
