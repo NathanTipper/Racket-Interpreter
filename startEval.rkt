@@ -2,8 +2,6 @@
 ; Racket interpreter - CPSC 3740 Final Project
 ; Nathan Tipper & Vincent Cote
 ; April 1st, 2019
-(require "operators.rkt")
-(require "lists.rkt")
 
 ; Helper function to add a new binding to the current list of bindings
 ; Parameter newBinding: the new binding to be added to the list
@@ -68,6 +66,74 @@
     [else (createLambdaBindings (cdr bindings) (append lambda (list (car bindings))))]
     )
   )
+
+; given the program, get the first thing within the program
+(provide getCar)
+(define (getCar program)
+  (car (car program))
+  )
+
+; given the program, the rest of the program
+(provide getCdr)
+(define (getCdr program)
+  (cdr (car program))
+  )
+
+; is x a pair?
+(provide isPair?)
+(define (isPair? x)
+  (pair? x)
+  )
+
+; Add x and y 
+(provide add)
+(define (add x y)
+  (+ x y))
+
+; Subtract y from x
+(provide sub)
+(define (sub x y)
+  (- x y))
+
+; Multiply x by y
+(provide mult)
+(define (mult x y)
+  (* x y))
+
+; Divide x by y
+(provide div)
+(define (div x y)
+  (/ x y))
+
+; Are x and y equal in value?
+(provide isEqual?)
+(define (isEqual? x y)
+  (= x y))
+
+; Is x less than y?
+(provide isLessThan?)
+(define (isLessThan? x y)
+  (< x y))
+
+; Is x greater than y?
+(provide isGreaterThan?)
+(define (isGreaterThan? x y)
+  (> x y))
+
+; Is x less than or equal to y
+(provide isLessThanOrEqual?)
+(define (isLessThanOrEqual? x y)
+  (<= x y))
+
+; Is x greater than or equal to y
+(provide isGreaterThanOrEqual?)
+(define (isGreaterThanOrEqual? x y)
+  (>= x y))
+
+; Are x and y equal?
+(provide areEqual?)
+(define (areEqual? x y)
+  (equal? x y))
 
 (define (startEval program)
   (myEval program '())
